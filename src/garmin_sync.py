@@ -111,13 +111,11 @@ class GarminWeightTracker:
 
             if data and "dateWeightList" in data:
                 for entry in data["dateWeightList"]:
-                    measurement_timestamp = entry[
-                        "date"
-                    ]  # This is the Garmin timestamp
+                    measurement_timestamp = entry["date"]  # This is the Garmin timestamp (millis)
                     weight_data.append(
                         WeightMeasurement(
                             timestamp=measurement_timestamp / 1000,
-                            date=datetime.fromtimestamp(measurement_timestamp).strftime(
+                            date=datetime.fromtimestamp(measurement_timestamp / 1000).strftime(
                                 "%Y-%m-%d"
                             ),
                             weight=entry["weight"] / 1000,
@@ -143,22 +141,7 @@ class GarminWeightTracker:
 
     def serialize_weight_measurement(self, measurement: WeightMeasurement) -> tuple:
         """Convert a WeightMeasurement into a tuple for database insertion."""
-        return (
-            measurement["timestamp"],
-            measurement["date"],
-            measurement["weight"],
-            measurement.get("bmi"),
-            measurement.get("body_fat"),
-            measurement.get("body_water"),
-            measurement.get("bone_mass"),
-            measurement.get("muscle_mass"),
-            measurement.get("physique_rating"),
-            measurement.get("visceral_fat"),
-            measurement.get("metabolic_age"),
-            measurement.get("source_type"),
-            int(datetime.now().timestamp()),
-            "garmin",
-        )
+        return
 
     def _process_garmin_data(
         self, data_list: List[WeightMeasurement]
@@ -190,7 +173,22 @@ class GarminWeightTracker:
                         source_type, created_at, source)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
-                        self.serialize_weight_measurement(measurement),
+                        (
+                            measurement["timestamp"],
+                            measurement["date"],
+                            measurement["weight"],
+                            measurement.get("bmi"),
+                            measurement.get("body_fat"),
+                            measurement.get("body_water"),
+                            measurement.get("bone_mass"),
+                            measurement.get("muscle_mass"),
+                            measurement.get("physique_rating"),
+                            measurement.get("visceral_fat"),
+                            measurement.get("metabolic_age"),
+                            measurement.get("source_type"),
+                            int(datetime.now().timestamp()),
+                            "garmin",
+                        ),
                     )
             conn.commit()
             logging.info(
