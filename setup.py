@@ -4,4 +4,5 @@ setup(
     name="garmin_sync",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
-) 
+    extras_require={"dev": ["black", "pytest"]},
+)

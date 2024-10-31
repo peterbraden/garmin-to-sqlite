@@ -10,9 +10,11 @@ source venv/bin/activate
 # Install required packages
 pip install pytest
 pip install garminconnect
-pip install pytest
+pip install black
+
+# Install the package in editable mode with dev dependencies
+pip install -e ".[dev]"
 
 # Verify installation
 pytest --version
-
-pip install -e .
+black --version
