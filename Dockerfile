@@ -2,8 +2,8 @@ FROM python:3.9-slim
 
 RUN pip install garminconnect schedule
 
-COPY garmin_sync.py /app/garmin_sync.py
-COPY run_daily.py /app/run_daily.py
+COPY src/garmin_sync.py /app/garmin_sync.py
+COPY src/run_daily.py /app/run_daily.py
 
 # Set up the environment
 ENV GARMIN_EMAIL=
