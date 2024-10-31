@@ -120,15 +120,16 @@ def test_get_earliest_weight_data_custom_max_days(tracker):
     mock_client.get_body_composition.side_effect = [
         {"dateWeightList": []},  # First call - empty
         {"dateWeightList": []},  # Second call - empty
-        {"dateWeightList": [     # Third call - has data
-            {
-                "date": 1640937600,  # 2021-12-31
-                "weight": 710000,
-                "bmi": 22.3,
-                "sourceType": "manual",
-            }
-        ]},
-
+        {
+            "dateWeightList": [  # Third call - has data
+                {
+                    "date": 1640937600,  # 2021-12-31
+                    "weight": 710000,
+                    "bmi": 22.3,
+                    "sourceType": "manual",
+                }
+            ]
+        },
     ]
     tracker.client = mock_client
     tracker.setup_database()

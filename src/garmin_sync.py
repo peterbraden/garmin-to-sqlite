@@ -114,22 +114,24 @@ class GarminWeightTracker:
                     measurement_timestamp = entry[
                         "date"
                     ]  # This is the Garmin timestamp
-                    weight_data.append(WeightMeasurement(
-                        timestamp=measurement_timestamp / 1000,
-                        date=datetime.fromtimestamp(
-                            measurement_timestamp
-                        ).strftime("%Y-%m-%d"),
-                        weight=entry["weight"] / 1000,
-                        bmi=entry.get("bmi", None),
-                        body_fat=entry.get("bodyFat", None),
-                        body_water=entry.get("bodyWater", None),
-                        bone_mass=entry.get("boneMass", None),
-                        muscle_mass=entry.get("muscleMass", None),
-                        physique_rating=entry.get("physiqueRating", None),
-                        visceral_fat=entry.get("visceralFat", None),
-                        metabolic_age=entry.get("metabolicAge", None),
-                        source_type=entry.get("sourceType", None),
-                    ))
+                    weight_data.append(
+                        WeightMeasurement(
+                            timestamp=measurement_timestamp / 1000,
+                            date=datetime.fromtimestamp(measurement_timestamp).strftime(
+                                "%Y-%m-%d"
+                            ),
+                            weight=entry["weight"] / 1000,
+                            bmi=entry.get("bmi", None),
+                            body_fat=entry.get("bodyFat", None),
+                            body_water=entry.get("bodyWater", None),
+                            bone_mass=entry.get("boneMass", None),
+                            muscle_mass=entry.get("muscleMass", None),
+                            physique_rating=entry.get("physiqueRating", None),
+                            visceral_fat=entry.get("visceralFat", None),
+                            metabolic_age=entry.get("metabolicAge", None),
+                            source_type=entry.get("sourceType", None),
+                        )
+                    )
 
                 logging.debug(
                     f"Fetched {len(data['dateWeightList'])} weight measurements for {date.date()}"
