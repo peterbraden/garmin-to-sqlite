@@ -38,6 +38,23 @@ docker run
     python /app/entrypoint.py --sync-type=schedule
 ```
 
+Or using docker compose:
+
+```docker-compose.yml
+version: '3'
+
+services:
+  garmin-to-sqlite:
+    image: ghcr.io/peterbraden/garmin-to-sqlite:latest 
+    environment:
+      - GARMIN_EMAIL=${GARMIN_EMAIL}
+      - GARMIN_PASSWORD=${GARMIN_PASSWORD}
+    volumes:
+      - weight-data:/app/data
+
+volumes:
+  weight-data:
+```
 
 ## Meta
 This project is created as an experiment to see the limits of AI autogeneration, so there could be some fun warts. I'm currently trying Cursor and a 'pair programming' style of interaction to see how far I can get.

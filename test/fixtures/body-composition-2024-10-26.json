@@ -1,0 +1,36 @@
+{
+  "startDate": "2024-10-26",
+  "endDate": "2024-10-26",
+  "dateWeightList": [
+    {
+      "samplePk": 1729929695662,
+      "date": 1729936866000,
+      "calendarDate": "2024-10-26",
+      "weight": 82059.0,
+      "bmi": 27.399999618530273,
+      "bodyFat": 26.2,
+      "bodyWater": 53.9,
+      "boneMass": 4780,
+      "muscleMass": 33090,
+      "physiqueRating": null,
+      "visceralFat": null,
+      "metabolicAge": null,
+      "sourceType": "INDEX_SCALE",
+      "timestampGMT": 1729929666000,
+      "weightDelta": null
+    }
+  ],
+  "totalAverage": {
+    "from": 1729900800000,
+    "until": 1729987199999,
+    "weight": 82059.0,
+    "bmi": 27.399999618530273,
+    "bodyFat": 26.2,
+    "bodyWater": 53.9,
+    "boneMass": 4780,
+    "muscleMass": 33090,
+    "physiqueRating": null,
+    "visceralFat": null,
+    "metabolicAge": null
+  }
+}
