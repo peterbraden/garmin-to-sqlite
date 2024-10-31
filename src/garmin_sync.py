@@ -24,11 +24,13 @@ class GarminWeightTracker:
         self.password = password
         self.db_path = db_path
         self.token_file = token_file
+        self._db = sqlite3.connect(self.db_path)
         self.setup_database()
+
 
     def setup_database(self):
         """Create the database and table if they don't exist."""
-        with sqlite3.connect(self.db_path) as conn:
+        with self._db as conn:
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS weight_measurements (
@@ -145,7 +147,7 @@ class GarminWeightTracker:
 
         # Store in database
         logging.info(f"Storing {len(weight_data)} weight measurements in the database")
-        with sqlite3.connect(self.db_path) as conn:
+        with self._db as conn:
             for measurement in weight_data:
                 logging.info(f"Storing {measurement}")
                 conn.execute(
