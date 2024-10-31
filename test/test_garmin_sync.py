@@ -7,23 +7,24 @@ from garmin_sync import GarminWeightTracker
 
 
 @pytest.fixture
-def mock_fixture_data():
-    return [
-        {
-            "timestamp": 1641024000000,  # 2022-01-01
-            "date": "2022-01-01",
-            "weight": 70.5,
-            "bmi": 22.1,
-            "body_fat": 15.0,
-            "body_water": 60.0,
-            "bone_mass": 3.2,
-            "muscle_mass": 55.3,
-            "physique_rating": "lean",
-            "visceral_fat": 7.0,
-            "metabolic_age": 25,
-            "source_type": "manual",
-        }
-    ]
+def mock_garmin_data():
+    return {
+        "dateWeightList": [
+            {
+                "date": 1641024000000,  # 2022-01-01
+                "weight": 70.5,
+                "bmi": 22.1,
+                "bodyFat": 15.0,
+                "bodyWater": 60.0,
+                "boneMass": 3.2,
+                "muscleMass": 55.3,
+                "physiqueRating": "lean",
+                "visceralFat": 7.0,
+                "metabolicAge": 25,
+                "sourceType": "manual",
+            }
+        ]
+    }
 
 
 @pytest.fixture
@@ -66,30 +67,36 @@ def test_setup_database(tracker):
     assert columns == expected_columns
 
 
-def test_get_weight_data_fixture(tracker, mock_fixture_data):
-    """Test getting weight data from fixture"""
+def test_get_weight_data_fixture(tracker, mock_garmin_data):
+    """Test getting weight data from Garmin API"""
     start_date = datetime(2022, 1, 1)
-    end_date = datetime(2022, 1, 2)
+    end_date = datetime(2022, 1, 1)
 
-    with patch("builtins.open") as mock_open:
-        mock_open.return_value.__enter__.return_value.read.return_value = json.dumps(
-            mock_fixture_data
-        )
-        data = tracker.get_weight_data(start_date, end_date)
+    # Mock the Garmin client
+    mock_client = Mock()
+    mock_client.get_body_composition.return_value = mock_garmin_data
+    tracker.client = mock_client
+
+    data = tracker.get_weight_data(start_date, end_date)
 
     assert len(data) == 1
     assert data[0]["weight"] == 70.5
     assert data[0]["date"] == "2022-01-01"
+    mock_client.get_body_composition.assert_called_with("2022-01-01")
 
 
-def test_fetch_and_store_weight(tracker, mock_fixture_data):
+def test_fetch_and_store_weight(tracker, mock_garmin_data):
     """Test storing weight data in database"""
     tracker.setup_database()  # Ensure database is set up
     start_date = datetime(2022, 1, 1)
-    end_date = datetime(2022, 1, 2)
+    end_date = datetime(2022, 1, 1)
 
-    with patch.object(tracker, "get_weight_data", return_value=mock_fixture_data):
-        tracker.fetch_and_store_weight(start_date, end_date)
+    # Mock the Garmin client
+    mock_client = Mock()
+    mock_client.get_body_composition.return_value = mock_garmin_data
+    tracker.client = mock_client
+
+    tracker.fetch_and_store_weight(start_date, end_date)
 
     # Verify data was stored correctly
     cursor = tracker._db.cursor()
@@ -100,3 +107,4 @@ def test_fetch_and_store_weight(tracker, mock_fixture_data):
     assert row[1] == "2022-01-01"  # date
     assert row[2] == 70.5  # weight
     assert row[3] == 22.1  # bmi
+    mock_client.get_body_composition.assert_called_with("2022-01-01")
