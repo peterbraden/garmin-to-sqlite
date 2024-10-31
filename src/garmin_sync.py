@@ -11,8 +11,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(mes
 class GarminWeightTracker:
     """Class to fetch and store weight data from Garmin Connect."""
 
-    def __init__(self, db_path: str = "/app/data/weight_data.db", token_file: str = "/app/data/garmin_token.json"):
+    def __init__(self,  email: str, password: str, db_path: str = "/app/data/weight_data.db", token_file: str = "/app/data/garmin_token.json"):
         """Initialize the tracker with database and token paths."""
+        self.email = email
+        self.password = password
         self.db_path = db_path
         self.token_file = token_file
         self.setup_database()
@@ -39,12 +41,12 @@ class GarminWeightTracker:
                 )
             """) 
 
-    def connect_to_garmin(self, email: str, password: str) -> Optional[Garmin]:
+    def connect_to_garmin(self) -> Optional[Garmin]:
         """Connect to Garmin Connect API."""
         try:
             logging.info("Connecting to Garmin Connect")
-            client = Garmin(email, password)
-            
+            client = Garmin(self.email, self.password)
+
             # Try to load existing token
             try:
                 if os.path.exists(self.token_file):
@@ -190,28 +192,3 @@ class GarminWeightTracker:
             return None
 
 
-def main(use_fixture_data: bool = False):
-    email = os.getenv('GARMIN_EMAIL')
-    password = os.getenv('GARMIN_PASSWORD')
-    
-    if not email or not password:
-        logging.error("Please set GARMIN_EMAIL and GARMIN_PASSWORD environment variables")
-        return
-    
-    tracker = GarminWeightTracker()
-
-    if use_fixture_data:
-        client = None
-    else:
-        client = tracker.connect_to_garmin(email, password)
-    
-    """
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=10)
-    tracker.fetch_and_store_weight(start_date, end_date, client=client)
-    """
-
-    tracker.get_earliest_weight_data(client)
-
-if __name__ == "__main__":
-    main()
