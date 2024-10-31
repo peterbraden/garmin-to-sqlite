@@ -140,7 +140,6 @@ class GarminWeightTracker:
             date += timedelta(days=1)
         return weight_data
 
-
     def _process_garmin_data(
         self, data_list: List[WeightMeasurement]
     ) -> tuple[Optional[int], int]:
@@ -225,7 +224,9 @@ class GarminWeightTracker:
                 else:
                     empty_days_count = 0
 
-                    weight_data = [self._get_garmin_body_composition(entry) for entry in data_list]
+                    weight_data = [
+                        self._get_garmin_body_composition(entry) for entry in data_list
+                    ]
                     timestamp, _ = self._process_garmin_data(weight_data)
                     if earliest_timestamp is None or timestamp < earliest_timestamp:
                         earliest_timestamp = timestamp
