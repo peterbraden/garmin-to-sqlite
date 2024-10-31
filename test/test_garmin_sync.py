@@ -115,19 +115,21 @@ def test_fetch_and_store_weight(tracker, mock_garmin_data):
 def test_get_earliest_weight_data_custom_max_days(tracker):
     """Test that get_earliest_weight_data respects custom max_empty_days parameter"""
     mock_client = Mock()
-    
+
     # First return empty data, then return some data
     mock_client.get_body_composition.side_effect = [
         {"dateWeightList": []},  # First call - empty
         {"dateWeightList": []},  # Second call - empty
-        {"dateWeightList": [     # Third call - has data
-            {
-                "date": 1640937600000,  # 2021-12-31
-                "weight": 71.0,
-                "bmi": 22.3,
-                "sourceType": "manual",
-            }
-        ]},
+        {
+            "dateWeightList": [  # Third call - has data
+                {
+                    "date": 1640937600000,  # 2021-12-31
+                    "weight": 71.0,
+                    "bmi": 22.3,
+                    "sourceType": "manual",
+                }
+            ]
+        },
     ]
     tracker.client = mock_client
     tracker.setup_database()
@@ -155,7 +157,7 @@ def test_get_earliest_weight_data_custom_max_days(tracker):
 def test_process_garmin_data(tracker):
     """Test the _process_garmin_data helper method"""
     tracker.setup_database()  # Ensure database is set up
-    
+
     test_data = [
         WeightMeasurement(
             timestamp=1641024000000,  # 2022-01-01
@@ -169,7 +171,7 @@ def test_process_garmin_data(tracker):
             physique_rating="lean",
             visceral_fat=7.0,
             metabolic_age=25,
-            source_type="manual"
+            source_type="manual",
         ),
         WeightMeasurement(
             timestamp=1640937600000,  # 2021-12-31
@@ -183,23 +185,23 @@ def test_process_garmin_data(tracker):
             physique_rating=None,
             visceral_fat=None,
             metabolic_age=None,
-            source_type="manual"
-        )
+            source_type="manual",
+        ),
     ]
-    
+
     earliest_timestamp, count = tracker._process_garmin_data(test_data)
-    
+
     assert earliest_timestamp == 1640937600000  # Should be the earlier date
     assert count == 2
-    
+
     # Verify data was stored correctly
     cursor = tracker._db.cursor()
     cursor.execute("SELECT * FROM weight_measurements ORDER BY timestamp")
     rows = cursor.fetchall()
-    
+
     assert len(rows) == 2
     assert rows[0][0] == 1640937600000  # timestamp of first row
-    assert rows[0][1] == "2021-12-31"   # date of first row
-    assert rows[0][2] == 71.0           # weight of first row
+    assert rows[0][1] == "2021-12-31"  # date of first row
+    assert rows[0][2] == 71.0  # weight of first row
     assert rows[1][0] == 1641024000000  # timestamp of second row
-    assert rows[1][2] == 70.5           # weight of second row
+    assert rows[1][2] == 70.5  # weight of second row
