@@ -11,8 +11,8 @@ def mock_garmin_data():
     return {
         "dateWeightList": [
             {
-                "date": 1641024000000,  # 2022-01-01
-                "weight": 70.5,
+                "date": 1641024000,  # 2022-01-01
+                "weight": 70500,
                 "bmi": 22.1,
                 "bodyFat": 15.0,
                 "bodyWater": 60.0,
@@ -105,7 +105,7 @@ def test_fetch_and_store_weight(tracker, mock_garmin_data):
     cursor.execute("SELECT * FROM weight_measurements")
     row = cursor.fetchone()
 
-    assert row[0] == 1641024000000  # timestamp
+    assert row[0] == 1641024  # timestamp
     assert row[1] == "2022-01-01"  # date
     assert row[2] == 70.5  # weight
     assert row[3] == 22.1  # bmi
@@ -122,8 +122,8 @@ def test_get_earliest_weight_data_custom_max_days(tracker):
         {"dateWeightList": []},  # Second call - empty
         {"dateWeightList": [     # Third call - has data
             {
-                "date": 1640937600000,  # 2021-12-31
-                "weight": 71.0,
+                "date": 1640937600,  # 2021-12-31
+                "weight": 710000,
                 "bmi": 22.3,
                 "sourceType": "manual",
             }

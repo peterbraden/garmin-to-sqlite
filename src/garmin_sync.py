@@ -112,11 +112,11 @@ class GarminWeightTracker:
                         "date"
                     ]  # This is the Garmin timestamp
                     weight_data.append(WeightMeasurement(
-                        timestamp=measurement_timestamp,
+                        timestamp=measurement_timestamp / 1000,
                         date=datetime.fromtimestamp(
-                            measurement_timestamp / 1000
+                            measurement_timestamp
                         ).strftime("%Y-%m-%d"),
-                        weight=entry.get("weight", None),
+                        weight=entry["weight"] / 1000,
                         bmi=entry.get("bmi", None),
                         body_fat=entry.get("bodyFat", None),
                         body_water=entry.get("bodyWater", None),
