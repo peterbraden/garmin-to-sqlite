@@ -3,7 +3,7 @@ from datetime import datetime
 import os
 import json
 from unittest.mock import Mock, patch
-from src.garmin_sync import GarminWeightTracker
+from garmin_sync import GarminWeightTracker
 
 @pytest.fixture
 def mock_fixture_data():

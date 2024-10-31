@@ -9,7 +9,10 @@ source venv/bin/activate
 
 # Install required packages
 pip install pytest
-pip install garminconnect  # Based on your imports, you'll need this too
+pip install garminconnect
+pip install pytest
 
 # Verify installation
 pytest --version
+
+pip install -e .
