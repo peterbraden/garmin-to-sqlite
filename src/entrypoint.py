@@ -1,5 +1,6 @@
 import os
 import logging
+import argparse
 from datetime import datetime, timedelta
 from garmin_sync import GarminWeightTracker
 
@@ -14,7 +15,18 @@ def sync_all_data(tracker: GarminWeightTracker):
     tracker.get_earliest_weight_data()
 
 
-def main(use_fixture_data: bool = False):
+def main():
+    parser = argparse.ArgumentParser(description='Sync weight data from Garmin Connect')
+    parser.add_argument('--sync-type', 
+                       choices=['recent', 'all'],
+                       default='recent',
+                       help='Type of sync: "recent" for last N days, "all" for all data')
+    parser.add_argument('--days', 
+                       type=int,
+                       default=10,
+                       help='Number of days to sync for recent sync type (default: 10)')
+    args = parser.parse_args()
+
     email = os.getenv("GARMIN_EMAIL")
     password = os.getenv("GARMIN_PASSWORD")
 
@@ -24,12 +36,13 @@ def main(use_fixture_data: bool = False):
         )
         return
 
-    if use_fixture_data:
-        tracker = GarminWeightTracker()
-    else:
-        tracker = GarminWeightTracker(email, password)
+    tracker = GarminWeightTracker(email, password)
+    tracker.connect_to_garmin()
 
-    sync_last_n_days(tracker)
+    if args.sync_type == 'recent':
+        sync_last_n_days(tracker, args.days)
+    else:
+        sync_all_data(tracker)
 
 
 if __name__ == "__main__":

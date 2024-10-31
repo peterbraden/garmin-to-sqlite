@@ -22,8 +22,10 @@ class GarminWeightTracker:
         """Initialize the tracker with database and token paths."""
         self.email = email
         self.password = password
+        self.client = None
         self.db_path = db_path
         self.token_file = token_file
+
         self._db = sqlite3.connect(self.db_path)
         self.setup_database()
 
@@ -74,32 +76,33 @@ class GarminWeightTracker:
             client.login()
             client.garth.dump(self.token_file)
             logging.info("Connected to Garmin Connect and saved token")
+            self.client = client
             return client
         except Exception as e:
             logging.error(f"Failed to connect to Garmin: {e}")
             return None
 
     def get_weight_data(
-        self, start_date: datetime, end_date: datetime, client: Optional[Garmin] = None
+        self, start_date: datetime, end_date: datetime
     ) -> List[Dict]:
-        if not client:
+        if not self.client:
             logging.info("Using fixture data")
             return self._get_fixture_data()
-        return self._get_live_data(start_date, end_date, client)
+        return self._get_live_data(start_date, end_date, self.client)
 
     def _get_fixture_data(self) -> List[Dict]:
         with open("/app/fixture-data/weight-data.json", "r") as f:
             return json.load(f)
 
     def _get_live_data(
-        self, start_date: datetime, end_date: datetime, client: Garmin
+        self, start_date: datetime, end_date: datetime
     ) -> List[Dict]:
         """Fetch weight data from Garmin Connect within the given date range."""
         weight_data = []
         date = start_date
         while date <= end_date:
             logging.debug(f"Fetching weight data for {date.date()}")
-            data = client.get_body_composition(date.isoformat()[:10])
+            data = self.client.get_body_composition(date.isoformat()[:10])
 
             if data and "dateWeightList" in data:
                 for entry in data["dateWeightList"]:
@@ -135,15 +138,13 @@ class GarminWeightTracker:
                 json.dump(weight_data, f, indent=2)
         return weight_data
 
-    def fetch_and_store_weight(
-        self, start_date: datetime, end_date: datetime, client: Optional[Garmin] = None
-    ):
+    def fetch_and_store_weight(self, start_date: datetime, end_date: datetime):
         """Fetch weight data from Garmin and store in SQLite."""
         # Fetch weight data
         logging.info(
             f"Fetching weight data from {start_date.date()} to {end_date.date()}"
         )
-        weight_data = self.get_weight_data(start_date, end_date, client=client)
+        weight_data = self.get_weight_data(start_date, end_date)
 
         # Store in database
         logging.info(f"Storing {len(weight_data)} weight measurements in the database")
@@ -182,7 +183,7 @@ class GarminWeightTracker:
 
         logging.info("Successfully stored weight data")
 
-    def get_earliest_weight_data(self, client: Garmin) -> Optional[datetime]:
+    def get_earliest_weight_data(self) -> Optional[datetime]:
         """Get the earliest date for which weight data is available.
 
         Searches backwards in 30-day chunks and stops when it finds 60 consecutive
@@ -202,11 +203,11 @@ class GarminWeightTracker:
                     f"Fetching and storing data from {current_date.date()} to {chunk_end.date()}"
                 )
 
-                data = client.get_body_composition(current_date.isoformat()[:10])
+                data = self.client.get_body_composition(current_date.isoformat()[:10])
 
                 if data and "dateWeightList" in data and data["dateWeightList"]:
                     # Store the data we got
-                    self.fetch_and_store_weight(current_date, chunk_end, client=client)
+                    self.fetch_and_store_weight(current_date, chunk_end)
 
                     # Found some data, reset empty days counter
                     empty_days_count = 0
