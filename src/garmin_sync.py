@@ -29,7 +29,6 @@ class GarminWeightTracker:
         self._db = sqlite3.connect(self.db_path)
         self.setup_database()
 
-
     def setup_database(self):
         """Create the database and table if they don't exist."""
         with self._db as conn:
@@ -83,9 +82,7 @@ class GarminWeightTracker:
             logging.error(f"Failed to connect to Garmin: {e}")
             return None
 
-    def get_weight_data(
-        self, start_date: datetime, end_date: datetime
-    ) -> List[Dict]:
+    def get_weight_data(self, start_date: datetime, end_date: datetime) -> List[Dict]:
         if not self.client:
             logging.info("Using fixture data")
             return self._get_fixture_data()
@@ -95,9 +92,7 @@ class GarminWeightTracker:
         with open("/app/fixture-data/weight-data.json", "r") as f:
             return json.load(f)
 
-    def _get_live_data(
-        self, start_date: datetime, end_date: datetime
-    ) -> List[Dict]:
+    def _get_live_data(self, start_date: datetime, end_date: datetime) -> List[Dict]:
         """Fetch weight data from Garmin Connect within the given date range."""
         weight_data = []
         date = start_date

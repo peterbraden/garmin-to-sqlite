@@ -29,15 +29,19 @@ def regular_sync(tracker: GarminWeightTracker):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Sync weight data from Garmin Connect')
-    parser.add_argument('--sync-type', 
-                       choices=['recent', 'all', 'schedule'],
-                       default='recent',
-                       help='Type of sync: "recent" for last N days, "all" for all data, "schedule" for scheduled sync')
-    parser.add_argument('--days', 
-                       type=int,
-                       default=10,
-                       help='Number of days to sync for recent sync type (default: 10)')
+    parser = argparse.ArgumentParser(description="Sync weight data from Garmin Connect")
+    parser.add_argument(
+        "--sync-type",
+        choices=["recent", "all", "schedule"],
+        default="recent",
+        help='Type of sync: "recent" for last N days, "all" for all data, "schedule" for scheduled sync',
+    )
+    parser.add_argument(
+        "--days",
+        type=int,
+        default=10,
+        help="Number of days to sync for recent sync type (default: 10)",
+    )
     args = parser.parse_args()
 
     email = os.getenv("GARMIN_EMAIL")
@@ -52,11 +56,11 @@ def main():
     tracker = GarminWeightTracker(email, password)
     tracker.connect_to_garmin()
 
-    if args.sync_type == 'recent':
+    if args.sync_type == "recent":
         sync_last_n_days(tracker, args.days)
-    elif args.sync_type == 'all':
+    elif args.sync_type == "all":
         sync_all_data(tracker)
-    elif args.sync_type == 'schedule':
+    elif args.sync_type == "schedule":
         regular_sync(tracker)
 
 
