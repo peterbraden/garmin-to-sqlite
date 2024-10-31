@@ -17,4 +17,4 @@ RUN mkdir -p /app/fixture-data
 
 
 # Start the scheduled script
-CMD ["python", "/app/run_daily.py"]
+CMD ["python", "/app/entrypoint.py", "--sync-type=schedule"]
