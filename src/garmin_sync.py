@@ -68,6 +68,7 @@ class GarminWeightTracker:
                     # Verify the token is still valid
                     client.get_full_name()
                     logging.info("Loaded valid token")
+                    self.client = client
                     return client
             except:
                 logging.info("Saved token expired, logging in again")
@@ -88,7 +89,7 @@ class GarminWeightTracker:
         if not self.client:
             logging.info("Using fixture data")
             return self._get_fixture_data()
-        return self._get_live_data(start_date, end_date, self.client)
+        return self._get_live_data(start_date, end_date)
 
     def _get_fixture_data(self) -> List[Dict]:
         with open("/app/fixture-data/weight-data.json", "r") as f:
