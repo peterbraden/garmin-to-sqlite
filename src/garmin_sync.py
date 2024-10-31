@@ -83,16 +83,6 @@ class GarminWeightTracker:
             return None
 
     def get_weight_data(self, start_date: datetime, end_date: datetime) -> List[Dict]:
-        if not self.client:
-            logging.info("Using fixture data")
-            return self._get_fixture_data()
-        return self._get_live_data(start_date, end_date)
-
-    def _get_fixture_data(self) -> List[Dict]:
-        with open("/app/fixture-data/weight-data.json", "r") as f:
-            return json.load(f)
-
-    def _get_live_data(self, start_date: datetime, end_date: datetime) -> List[Dict]:
         """Fetch weight data from Garmin Connect within the given date range."""
         weight_data = []
         date = start_date
@@ -130,8 +120,6 @@ class GarminWeightTracker:
             else:
                 logging.debug(f"No weight data found for {date.date()}")
             date += timedelta(days=1)
-            with open(f"/app/fixture-data/weight-data.json", "w+") as f:
-                json.dump(weight_data, f, indent=2)
         return weight_data
 
     def fetch_and_store_weight(self, start_date: datetime, end_date: datetime):
