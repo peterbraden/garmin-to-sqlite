@@ -9,6 +9,10 @@ on:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
     steps:
     - uses: actions/checkout@v4
     
@@ -29,8 +33,4 @@ jobs:
         docker tag $IMAGE_ID:$VERSION $IMAGE_ID:latest
         docker push $IMAGE_ID:$VERSION
         docker push $IMAGE_ID:latest
-      permissions:
-        contents: read
-        packages: write
-        attestations: write
-        id-token: write
+
