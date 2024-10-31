@@ -99,6 +99,25 @@ class GarminWeightTracker:
             logging.error(f"Failed to connect to Garmin: {e}")
             return None
 
+    def _get_garmin_body_composition(self, d: Dict) -> WeightMeasurement:
+        measurement_timestamp = d["date"]  # This is the Garmin timestamp (millis)
+        return WeightMeasurement(
+            timestamp=measurement_timestamp / 1000,
+            date=datetime.fromtimestamp(measurement_timestamp / 1000).strftime(
+                "%Y-%m-%d"
+            ),
+            weight=d["weight"] / 1000,  # garmin stores in grams...
+            bmi=d.get("bmi", None),
+            body_fat=d.get("bodyFat", None),
+            body_water=d.get("bodyWater", None),
+            bone_mass=d.get("boneMass", None),
+            muscle_mass=d.get("muscleMass", None),
+            physique_rating=d.get("physiqueRating", None),
+            visceral_fat=d.get("visceralFat", None),
+            metabolic_age=d.get("metabolicAge", None),
+            source_type=d.get("sourceType", None),
+        )
+
     def get_weight_data(
         self, start_date: datetime, end_date: datetime
     ) -> List[WeightMeasurement]:
@@ -111,25 +130,7 @@ class GarminWeightTracker:
 
             if data and "dateWeightList" in data:
                 for entry in data["dateWeightList"]:
-                    measurement_timestamp = entry["date"]  # This is the Garmin timestamp (millis)
-                    weight_data.append(
-                        WeightMeasurement(
-                            timestamp=measurement_timestamp / 1000,
-                            date=datetime.fromtimestamp(measurement_timestamp / 1000).strftime(
-                                "%Y-%m-%d"
-                            ),
-                            weight=entry["weight"] / 1000,
-                            bmi=entry.get("bmi", None),
-                            body_fat=entry.get("bodyFat", None),
-                            body_water=entry.get("bodyWater", None),
-                            bone_mass=entry.get("boneMass", None),
-                            muscle_mass=entry.get("muscleMass", None),
-                            physique_rating=entry.get("physiqueRating", None),
-                            visceral_fat=entry.get("visceralFat", None),
-                            metabolic_age=entry.get("metabolicAge", None),
-                            source_type=entry.get("sourceType", None),
-                        )
-                    )
+                    weight_data.append(self._get_garmin_body_composition(entry))
 
                 logging.debug(
                     f"Fetched {len(data['dateWeightList'])} weight measurements for {date.date()}"
@@ -139,9 +140,6 @@ class GarminWeightTracker:
             date += timedelta(days=1)
         return weight_data
 
-    def serialize_weight_measurement(self, measurement: WeightMeasurement) -> tuple:
-        """Convert a WeightMeasurement into a tuple for database insertion."""
-        return
 
     def _process_garmin_data(
         self, data_list: List[WeightMeasurement]
@@ -226,7 +224,9 @@ class GarminWeightTracker:
                     empty_days_count += 30
                 else:
                     empty_days_count = 0
-                    timestamp, _ = self._process_garmin_data(data_list)
+
+                    weight_data = [self._get_garmin_body_composition(entry) for entry in data_list]
+                    timestamp, _ = self._process_garmin_data(weight_data)
                     if earliest_timestamp is None or timestamp < earliest_timestamp:
                         earliest_timestamp = timestamp
 
