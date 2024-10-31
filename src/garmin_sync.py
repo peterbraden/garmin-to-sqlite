@@ -11,6 +11,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(mes
 
 class WeightMeasurement(TypedDict):
     """Type definition for weight measurement data."""
+
     timestamp: int
     date: str
     weight: float
@@ -98,7 +99,9 @@ class GarminWeightTracker:
             logging.error(f"Failed to connect to Garmin: {e}")
             return None
 
-    def get_weight_data(self, start_date: datetime, end_date: datetime) -> List[WeightMeasurement]:
+    def get_weight_data(
+        self, start_date: datetime, end_date: datetime
+    ) -> List[WeightMeasurement]:
         """Fetch weight data from Garmin Connect within the given date range."""
         weight_data: List[WeightMeasurement] = []
         date = start_date
@@ -152,26 +155,27 @@ class GarminWeightTracker:
             measurement.get("metabolic_age"),
             measurement.get("source_type"),
             int(datetime.now().timestamp()),
-            "garmin"
+            "garmin",
         )
 
-    def _process_garmin_data(self, data_list: List[WeightMeasurement]) -> tuple[Optional[int], int]:
+    def _process_garmin_data(
+        self, data_list: List[WeightMeasurement]
+    ) -> tuple[Optional[int], int]:
         """Process and store Garmin weight data.
-        
+
         Args:
             data_list: List of weight measurements from Garmin API
-            
+
         Returns:
             tuple: (earliest_timestamp, count_of_records)
         """
         earliest_timestamp = None
         records_count = 0
-        
+
         for measurement in data_list:
             timestamp = measurement["timestamp"]
             if earliest_timestamp is None or timestamp < earliest_timestamp:
                 earliest_timestamp = timestamp
-            
 
             with self._db as conn:
                 for measurement in data_list:
@@ -184,19 +188,19 @@ class GarminWeightTracker:
                         source_type, created_at, source)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
-                        self.serialize_weight_measurement(measurement)
+                        self.serialize_weight_measurement(measurement),
                     )
             conn.commit()
             logging.info(
                 f"Total rows in database: {conn.execute('SELECT COUNT(*) FROM weight_measurements').fetchone()[0]}"
             )
             records_count += 1
-            
+
         return earliest_timestamp, records_count
 
     def fetch_and_store_weight(self, start_date: datetime, end_date: datetime) -> int:
         """Fetch weight data from Garmin and store it in the database.
-        
+
         Returns:
             int: Number of records stored
         """
@@ -214,7 +218,7 @@ class GarminWeightTracker:
             while empty_days_count < max_empty_days:
                 date_str = current_date.strftime("%Y-%m-%d")
                 logging.info(f"Fetching data for {date_str}")
-                
+
                 response = self.client.get_body_composition(date_str)
                 data_list = response.get("dateWeightList", [])
 
@@ -227,9 +231,13 @@ class GarminWeightTracker:
                         earliest_timestamp = timestamp
 
                 current_date -= timedelta(days=30)
-                
-            return datetime.fromtimestamp(earliest_timestamp / 1000) if earliest_timestamp else None
-                
+
+            return (
+                datetime.fromtimestamp(earliest_timestamp / 1000)
+                if earliest_timestamp
+                else None
+            )
+
         except Exception as e:
             logging.error(f"Error in get_earliest_weight_data: {e}")
             return None
