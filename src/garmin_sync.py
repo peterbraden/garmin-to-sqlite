@@ -168,7 +168,7 @@ class GarminWeightTracker:
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         (
-                            measurement["timestamp"],
+                            int(measurement["timestamp"]),
                             measurement["date"],
                             measurement["weight"],
                             measurement.get("bmi"),
