@@ -142,7 +142,7 @@ class GarminWeightTracker:
 
     def _process_garmin_data(
         self, data_list: List[WeightMeasurement]
-    ) -> tuple[Optional[int], int]:
+    ) -> int:
         """Process and store Garmin weight data.
 
         Args:
@@ -151,13 +151,10 @@ class GarminWeightTracker:
         Returns:
             tuple: (earliest_timestamp, count_of_records)
         """
-        earliest_timestamp = None
         records_count = 0
 
         for measurement in data_list:
             timestamp = measurement["timestamp"]
-            if earliest_timestamp is None or timestamp < earliest_timestamp:
-                earliest_timestamp = timestamp
 
             with self._db as conn:
                 for measurement in data_list:
@@ -193,7 +190,7 @@ class GarminWeightTracker:
             )
             records_count += 1
 
-        return earliest_timestamp, records_count
+        return records_count
 
     def fetch_and_store_weight(self, start_date: datetime, end_date: datetime) -> int:
         """Fetch weight data from Garmin and store it in the database.
@@ -202,7 +199,7 @@ class GarminWeightTracker:
             int: Number of records stored
         """
         data = self.get_weight_data(start_date, end_date)
-        _, records_count = self._process_garmin_data(data)
+        records_count = self._process_garmin_data(data)
         return records_count
 
     def get_earliest_weight_data(self, chunk_size: int = 60, start_date: datetime = datetime.now()) -> Optional[datetime]:

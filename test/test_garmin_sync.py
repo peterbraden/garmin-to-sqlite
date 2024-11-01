@@ -148,11 +148,8 @@ def test_process_garmin_data(tracker):
         ),
     ]
 
-    earliest_timestamp, count = tracker._process_garmin_data(test_data)
-
-    assert earliest_timestamp == 1640937600000  # Should be the earlier date
+    count = tracker._process_garmin_data(test_data)
     assert count == 2
-
     # Verify data was stored correctly
     cursor = tracker._db.cursor()
     cursor.execute("SELECT * FROM weight_measurements ORDER BY timestamp")
