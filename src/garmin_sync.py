@@ -205,40 +205,26 @@ class GarminWeightTracker:
         _, records_count = self._process_garmin_data(data)
         return records_count
 
-    def get_earliest_weight_data(self, max_empty_days: int = 60) -> Optional[datetime]:
-        """Get the earliest date for which weight data is available."""
-        try:
-            current_date = datetime.now()
-            empty_days_count = 0
-            earliest_timestamp = None
+    def get_earliest_weight_data(self, chunk_size: int = 60, start_date: datetime = datetime.now()) -> Optional[datetime]:
+        """ Iteratively fetch weight data from Garmin until no new records are added with the given chunk size.
 
-            while empty_days_count < max_empty_days:
-                date_str = current_date.strftime("%Y-%m-%d")
-                logging.info(f"Fetching data for {date_str}")
+        Args:
+            chunk_size: Number of days to fetch at a time, also the window size which aborts when no new records are added
+            start_date: Date to start fetching from
 
-                response = self.client.get_body_composition(date_str)
-                data_list = response.get("dateWeightList", [])
+        Returns:
+            datetime: Earliest date for which weight data is available
+        """
+        current_date = start_date
+        earliest_date= None
+        records_added = 1
 
-                if not data_list:
-                    empty_days_count += 30
-                else:
-                    empty_days_count = 0
+        while records_added > 0:
+            date_str = current_date.strftime("%Y-%m-%d")
+            logging.info(f"Fetching data for {date_str}")
+            records_added = self.fetch_and_store_weight(current_date - timedelta(days=chunk_size), current_date)
+            current_date -= timedelta(days=chunk_size)
+            if records_added > 0:
+                earliest_date = current_date
 
-                    weight_data = [
-                        self._get_garmin_body_composition(entry) for entry in data_list
-                    ]
-                    timestamp, _ = self._process_garmin_data(weight_data)
-                    if earliest_timestamp is None or timestamp < earliest_timestamp:
-                        earliest_timestamp = timestamp
-
-                current_date -= timedelta(days=30)
-
-            return (
-                datetime.fromtimestamp(earliest_timestamp / 1000)
-                if earliest_timestamp
-                else None
-            )
-
-        except Exception as e:
-            logging.error(f"Error in get_earliest_weight_data: {e}")
-            return None
+        return earliest_date

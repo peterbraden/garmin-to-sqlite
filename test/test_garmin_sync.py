@@ -4,7 +4,7 @@ import os
 import json
 from unittest.mock import Mock, patch
 from garmin_sync import GarminWeightTracker, WeightMeasurement
-
+from datetime import timedelta
 
 @pytest.fixture
 def mock_garmin_data():
@@ -112,47 +112,6 @@ def test_fetch_and_store_weight(tracker, mock_garmin_data):
     mock_client.get_body_composition.assert_called_with("2022-01-01")
 
 
-def test_get_earliest_weight_data_custom_max_days(tracker):
-    """Test that get_earliest_weight_data respects custom max_empty_days parameter"""
-    mock_client = Mock()
-
-    # First return empty data, then return some data
-    mock_client.get_body_composition.side_effect = [
-        {"dateWeightList": []},  # First call - empty
-        {"dateWeightList": []},  # Second call - empty
-        {
-            "dateWeightList": [  # Third call - has data
-                {
-                    "date": 1640937600,  # 2021-12-31
-                    "weight": 710000,
-                    "bmi": 22.3,
-                    "sourceType": "manual",
-                }
-            ]
-        },
-    ]
-    tracker.client = mock_client
-    tracker.setup_database()
-
-    # Should make 2 attempts (60 days) before giving up
-    result = tracker.get_earliest_weight_data(max_empty_days=60)
-    assert mock_client.get_body_composition.call_count == 2
-    assert result is None
-
-    # Reset mock
-    mock_client.reset_mock()
-    mock_client.get_body_composition.side_effect = [
-        {"dateWeightList": []},  # First call - empty
-        {"dateWeightList": []},  # Second call - empty
-        {"dateWeightList": []},  # Third call - empty
-        {"dateWeightList": []},
-    ]
-
-    # Should make 4 attempts (120 days) before giving up
-    result = tracker.get_earliest_weight_data(max_empty_days=120)
-    assert mock_client.get_body_composition.call_count == 4
-    assert result is None
-
 
 def test_process_garmin_data(tracker):
     """Test the _process_garmin_data helper method"""
@@ -205,3 +164,63 @@ def test_process_garmin_data(tracker):
     assert rows[0][2] == 71.0  # weight of first row
     assert rows[1][0] == 1641024000000  # timestamp of second row
     assert rows[1][2] == 70.5  # weight of second row
+
+def test_get_earliest_weight_data(tracker, mock_garmin_data):
+    """Test getting earliest weight data with pagination"""
+    # Mock the Garmin client
+    mock_client = Mock()
+    
+    # Create mock data for different date ranges
+    data_2022_01_01 = {
+        "dateWeightList": [{
+            "date": 1641024000000,  # 2022-01-01
+            "weight": 70500,
+            "sourceType": "manual",
+        }]
+    }
+    
+    data_2021_12_01 = {
+        "dateWeightList": [{
+            "date": 1638316800000,  # 2021-12-01
+            "weight": 71000,
+            "sourceType": "manual",
+        }]
+    }
+    
+    data_empty = {"dateWeightList": []}
+    
+    # Mock get_body_composition to return different data based on the date
+    def mock_get_body_composition(date):
+        if date >= "2022-01-01":
+            return data_2022_01_01
+        elif date >= "2021-12-01":
+            return data_2021_12_01
+        return data_empty
+    
+    mock_client.get_body_composition.side_effect = mock_get_body_composition
+    tracker.client = mock_client
+
+    # Test with a 30-day chunk size starting from 2022-01-01
+    start_date = datetime(2022, 1, 1)
+    earliest_date = tracker.get_earliest_weight_data(
+        chunk_size=30,
+        start_date=start_date
+    )
+
+    # The earliest date should be exactly 2021-12-01 - 30 days
+    assert earliest_date is not None
+    assert earliest_date == datetime(2021, 11, 2)
+
+def test_get_earliest_weight_data_no_data(tracker):
+    """Test getting earliest weight data when no data is available"""
+    mock_client = Mock()
+    mock_client.get_body_composition.return_value = {"dateWeightList": []}
+    tracker.client = mock_client
+
+    start_date = datetime(2022, 1, 1)
+    earliest_date = tracker.get_earliest_weight_data(
+        chunk_size=30,
+        start_date=start_date
+    )
+
+    assert earliest_date is None
