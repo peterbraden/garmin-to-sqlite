@@ -140,9 +140,7 @@ class GarminWeightTracker:
             date += timedelta(days=1)
         return weight_data
 
-    def _process_garmin_data(
-        self, data_list: List[WeightMeasurement]
-    ) -> int:
+    def _process_garmin_data(self, data_list: List[WeightMeasurement]) -> int:
         """Process and store Garmin weight data.
 
         Args:
