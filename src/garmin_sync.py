@@ -202,8 +202,10 @@ class GarminWeightTracker:
         records_count = self._process_garmin_data(data)
         return records_count
 
-    def get_earliest_weight_data(self, chunk_size: int = 60, start_date: datetime = datetime.now()) -> Optional[datetime]:
-        """ Iteratively fetch weight data from Garmin until no new records are added with the given chunk size.
+    def get_earliest_weight_data(
+        self, chunk_size: int = 60, start_date: datetime = datetime.now()
+    ) -> Optional[datetime]:
+        """Iteratively fetch weight data from Garmin until no new records are added with the given chunk size.
 
         Args:
             chunk_size: Number of days to fetch at a time, also the window size which aborts when no new records are added
@@ -213,13 +215,15 @@ class GarminWeightTracker:
             datetime: Earliest date for which weight data is available
         """
         current_date = start_date
-        earliest_date= None
+        earliest_date = None
         records_added = 1
 
         while records_added > 0:
             date_str = current_date.strftime("%Y-%m-%d")
             logging.info(f"Fetching data for {date_str}")
-            records_added = self.fetch_and_store_weight(current_date - timedelta(days=chunk_size), current_date)
+            records_added = self.fetch_and_store_weight(
+                current_date - timedelta(days=chunk_size), current_date
+            )
             current_date -= timedelta(days=chunk_size)
             if records_added > 0:
                 earliest_date = current_date
